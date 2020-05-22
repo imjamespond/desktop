@@ -16,10 +16,13 @@ namespace WindowsFormsApplication1
         public static IntPtr HWnd;
 
         private Helper hp = new Helper();
+        private Clipboard clip = new Clipboard();
 
         public Form1()
         {
             InitializeComponent();
+
+            this.clip.init((int)this.Handle);
 
             //this.listBox1.Items.AddRange(new object[] {});
             //for (int i = 0; i < 20; i++)
@@ -65,6 +68,44 @@ namespace WindowsFormsApplication1
 
         public void SetLocation()
         {
+        }
+
+
+        protected override void WndProc(ref System.Windows.Forms.Message m)
+        {
+            // defined in winuser.h
+            const int WM_DRAWCLIPBOARD = 0x308;
+            const int WM_CHANGECBCHAIN = 0x030D;
+
+            switch (m.Msg)
+            {
+                case WM_DRAWCLIPBOARD: 
+                    Clipboard.SendMessage(clip.nextClipboardViewer, m.Msg, m.WParam,
+                                m.LParam);
+                    IDataObject iData = new DataObject();
+                    iData = System.Windows.Forms.Clipboard.GetDataObject();
+                    if (iData.GetDataPresent(DataFormats.Rtf))
+                        Console.WriteLine((string)iData.GetData(DataFormats.Rtf));
+                    //richTextBox1.Rtf = (string)iData.GetData(DataFormats.Rtf);
+                    else if (iData.GetDataPresent(DataFormats.Text))
+                        Console.WriteLine((string)iData.GetData(DataFormats.Text));
+                    else
+                        Console.WriteLine("[Clipboard data is not RTF or ASCII Text]");
+
+                    break;
+
+                case WM_CHANGECBCHAIN:
+                    if (m.WParam == clip.nextClipboardViewer)
+                        clip.nextClipboardViewer = m.LParam;
+                    else
+                        Clipboard.SendMessage(clip.nextClipboardViewer, m.Msg, m.WParam,
+                                    m.LParam);
+                    break;
+
+                default:
+                    base.WndProc(ref m);
+                    break;
+            }
         }
     }
 }
