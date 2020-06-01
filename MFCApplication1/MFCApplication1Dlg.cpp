@@ -9,6 +9,7 @@
 #include "afxdialogex.h"
 
 #include "Erwin.h"
+#include "WndHelper.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -22,17 +23,19 @@ class CAboutDlg : public CDialogEx
 public:
 	CAboutDlg();
 
-// 对话框数据
+	// 对话框数据
 #ifdef AFX_DESIGN_TIME
 	enum { IDD = IDD_ABOUTBOX };
 #endif
 
-	protected:
+protected:
 	virtual void DoDataExchange(CDataExchange* pDX);    // DDX/DDV 支持
 
 // 实现
 protected:
 	DECLARE_MESSAGE_MAP()
+
+public:
 };
 
 CAboutDlg::CAboutDlg() : CDialogEx(IDD_ABOUTBOX)
@@ -67,6 +70,9 @@ BEGIN_MESSAGE_MAP(CMFCApplication1Dlg, CDialogEx)
 	ON_WM_SYSCOMMAND()
 	ON_WM_PAINT()
 	ON_WM_QUERYDRAGICON()
+	ON_BN_CLICKED(IDC_BUTTON1, &CMFCApplication1Dlg::OnBnClickedButton1)
+	ON_WM_TIMER()
+	ON_MESSAGE(WM_USER, &CMFCApplication1Dlg::OnUser)
 END_MESSAGE_MAP()
 
 
@@ -103,7 +109,11 @@ BOOL CMFCApplication1Dlg::OnInitDialog()
 
 	// TODO: 在此添加额外的初始化代码
 
-	Erwin erwin;
+
+	km::SetHook(::GetDlgItem(this->m_hWnd, IDC_COMBO1));
+	//Erwin erwin;
+
+
 
 	return TRUE;  // 除非将焦点设置到控件，否则返回 TRUE
 }
@@ -157,3 +167,59 @@ HCURSOR CMFCApplication1Dlg::OnQueryDragIcon()
 	return static_cast<HCURSOR>(m_hIcon);
 }
 
+typedef void(*WndHelperTest)(bool);
+typedef void(__cdecl* SetHook)();
+typedef void(__cdecl* UnSetHook)();
+
+void CMFCApplication1Dlg::OnBnClickedButton1()
+{
+	// TODO: 在此添加控件通知处理程序代码
+
+	TRACE("OnBnClickedButton1\n");
+	//this->SetTimer(1, 1000, NULL);//启动定时器1,定时时间是1秒
+
+	//::SetFocus(::GetDlgItem(this->m_hWnd, IDC_COMBO1));
+	::SendMessage(::GetDlgItem(this->m_hWnd, IDC_COMBO1), WM_SETFOCUS, NULL, NULL);
+
+	HMODULE hMODULE = LoadLibrary(LR"(D:\projects\vs2019\Dll1\x64\Debug\Dll1.dll)"); //调试dll路径，属性->调试->环境：PATH=D:\projects\vs2019\Dll1\x64\Debug, 但调试dll附加进程时要copy exe到dll目录
+	if (hMODULE)
+	{
+		static bool toggle = true;
+		if (toggle)
+		{ 
+			SetHook func = (SetHook)GetProcAddress(hMODULE, "SetHook");
+			if (func)
+			{
+				func();
+			}
+		}
+		toggle = !toggle;
+	}
+
+}
+
+
+void CMFCApplication1Dlg::OnTimer(UINT_PTR nIDEvent)
+{
+	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	switch (nIDEvent)
+	{
+	case 1:
+	{
+		//WndHelper::Test();
+		break;
+	}
+	}
+	CDialogEx::OnTimer(nIDEvent);
+}
+
+
+
+
+afx_msg LRESULT CMFCApplication1Dlg::OnUser(WPARAM wParam, LPARAM lParam)
+{ 
+	
+	TRACE("OnUser %u, %u,\n", wParam,(int)lParam);
+	WndHelper::Test(true);
+	return 0;
+}
