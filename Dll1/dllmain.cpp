@@ -7,11 +7,14 @@ typedef void(*WndHelperTest)();
 int g_test = 0;
 
 HHOOK g_Hook = NULL;
+HHOOK g_Hook2 = NULL;
 HINSTANCE g_Instance = NULL;
 
 LRESULT _stdcall KeyboradProc(int code, WPARAM wParam, LPARAM lParam);
+LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 
 extern "C" __declspec(dllexport) VOID SetHook(); 
+extern "C" __declspec(dllexport) VOID UnsetHook();
 
 BOOL APIENTRY DllMain(HMODULE hModule,
 	DWORD  ul_reason_for_call,
@@ -41,12 +44,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,
 		case DLL_PROCESS_DETACH:
 		{
 			OutputDebugString(TEXT("释放dll"));
-			if (g_Hook)
-			{
-				UnhookWindowsHookEx(g_Hook);
-				g_Hook = NULL;
-			}
-				
+			UnsetHook();
 		}
 		break;
 	}
@@ -65,8 +63,24 @@ VOID SetHook()
 	//普通的键盘钩子  最后一个参数为NULL全局钩子,
 	// WH_KEYBOARD并不能捕获所有的系统按键, 必须WH_KEYBOARD_LL （低级键盘钩子）
 	g_Hook = SetWindowsHookEx(WH_KEYBOARD_LL, (HOOKPROC)KeyboradProc, g_Instance, NULL);
+	g_Hook2= SetWindowsHookEx(WH_CBT, (HOOKPROC)CBTProc, g_Instance, NULL);
 }
 
+void UnsetHook()
+{
+	if (g_Hook)
+	{
+		UnhookWindowsHookEx(g_Hook);
+		g_Hook = NULL;
+	}
+	if (g_Hook2)
+	{
+		UnhookWindowsHookEx(g_Hook2);
+		g_Hook2 = NULL;
+	}
+
+	::SendNotifyMessage(HWND_BROADCAST, WM_NULL, 0, 0);//some background processes may still keep the library locked long after your hook was removed. Broadcasting a WM_NULL message usually helps. 
+}
 
 LRESULT _stdcall KeyboradProc(int code, WPARAM wParam, LPARAM lParam)
 {
@@ -87,7 +101,7 @@ LRESULT _stdcall KeyboradProc(int code, WPARAM wParam, LPARAM lParam)
 			KBDLLHOOKSTRUCT* kbd = (KBDLLHOOKSTRUCT*)lParam;
 			if (WM_KEYUP == wParam)
 			{
-				::SendMessage(hWnd, WM_USER, wParam, lParam);
+				::SendMessage(hWnd, WM_USER+1, wParam, lParam);
 			} 
 		}
 
@@ -96,4 +110,27 @@ LRESULT _stdcall KeyboradProc(int code, WPARAM wParam, LPARAM lParam)
 
 	}
 	return  ::CallNextHookEx(g_Hook, code, wParam, lParam);
+}
+
+LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
+{ 
+
+	if (nCode < 0)  // do not process message 
+		return CallNextHookEx(g_Hook2, nCode, wParam, lParam);
+	 
+
+	switch (nCode)
+	{
+		case HCBT_SETFOCUS: 
+			HWND hWnd = ::FindWindow(NULL, L"foobar");
+			if (hWnd)
+			{
+				HWND h_currentFocus = (HWND)wParam;
+				HWND h_lastFocus = (HWND)lParam;
+				::SendMessage(hWnd, WM_USER + 2, wParam, lParam);
+				//::SendMessage(h_currentFocus, WM_CHAR, WPARAM('a'), 0);
+			}
+		break;
+	}
+	return CallNextHookEx(g_Hook2, nCode, wParam, lParam);
 }
