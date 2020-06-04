@@ -36,4 +36,21 @@ public:
 	afx_msg void OnTimer(UINT_PTR nIDEvent); 
 protected:
 	afx_msg LRESULT OnUser(WPARAM wParam, LPARAM lParam);
+public:
+	CListCtrl mList; 
+	afx_msg void OnClickList2(NMHDR* pNMHDR, LRESULT* pResult);
+protected:
+	afx_msg LRESULT OnUser2(WPARAM wParam, LPARAM lParam);
+private:
+	HMODULE hModule;
+public:
+//	afx_msg void OnClose();
+	afx_msg void OnDestroy();
+//	afx_msg void OnKillfocusList2(NMHDR* pNMHDR, LRESULT* pResult);
+//	afx_msg void OnSetfocusList2(NMHDR* pNMHDR, LRESULT* pResult);
+private:
+	int mSelectedItemIndex;
+public:
+//	afx_msg void OnKillfocusList2(NMHDR* pNMHDR, LRESULT* pResult);
+	afx_msg void OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2);
 };

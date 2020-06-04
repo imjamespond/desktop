@@ -81,7 +81,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
     <LibraryPath>D:\Program Files\erwin\Data Modeler r9;$(LibraryPath)</LibraryPath>
-    <IncludePath>$(IncludePath)</IncludePath>
+    <IncludePath>D:\work\boost_1_73_0;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
@@ -188,6 +188,7 @@
   <ItemGroup>
     <ClInclude Include="Erwin.h" />
     <ClInclude Include="framework.h" />
+    <ClInclude Include="Http.h" />
     <ClInclude Include="MFCApplication1.h" />
     <ClInclude Include="MFCApplication1Dlg.h" />
     <ClInclude Include="pch.h" />
@@ -197,6 +198,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Erwin.cpp" />
+    <ClCompile Include="Http.cpp" />
     <ClCompile Include="MFCApplication1.cpp" />
     <ClCompile Include="MFCApplication1Dlg.cpp" />
     <ClCompile Include="pch.cpp">

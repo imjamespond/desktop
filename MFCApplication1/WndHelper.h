@@ -2,13 +2,16 @@
 class WndHelper
 {
 public:
-	static void Test(bool debug = false);
+	static void Test(HWND wnd=NULL);
+
+    static CString CurText;
+    static HWND CurWnd;
 
 };
 
 namespace km
 {
-    void SetHook(HWND);
+    void SetTestWinEventHook(HWND);
 
     template<class T>
     T* GetSingleton()
