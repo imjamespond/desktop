@@ -43,14 +43,10 @@ protected:
 	afx_msg LRESULT OnUser2(WPARAM wParam, LPARAM lParam);
 private:
 	HMODULE hModule;
-public:
-//	afx_msg void OnClose();
-	afx_msg void OnDestroy();
-//	afx_msg void OnKillfocusList2(NMHDR* pNMHDR, LRESULT* pResult);
-//	afx_msg void OnSetfocusList2(NMHDR* pNMHDR, LRESULT* pResult);
+public: 
+	afx_msg void OnDestroy(); 
 private:
 	int mSelectedItemIndex;
-public:
-//	afx_msg void OnKillfocusList2(NMHDR* pNMHDR, LRESULT* pResult);
-	afx_msg void OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2);
+public: 
+	afx_msg void OnHotKey(UINT nHotKeyId, UINT nKey1, UINT nKey2); 
 };

@@ -74,6 +74,7 @@ void CMFCApplication1Dlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_LIST2, mList);
+	//  DDX_Control(pDX, IDC_EDIT1, mEdit1);
 }
 
 BEGIN_MESSAGE_MAP(CMFCApplication1Dlg, CDialogEx)
@@ -131,6 +132,7 @@ BOOL CMFCApplication1Dlg::OnInitDialog()
 	//Erwin erwin;
 	this->SetTimer(1, 3000, NULL);//启动定时器1,定时时间是1秒
 	this->hModule = InitDllHook();
+	this->GetDlgItem(IDC_EDIT1)->SetWindowText(TEXT("suggest.taobao.com"));
 	InitListCtrl(this->mList);
 	SetWindowPos(&this->wndTopMost, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE);
 
@@ -229,8 +231,10 @@ void CMFCApplication1Dlg::OnTimer(UINT_PTR nIDEvent)
 			//TRACE(L"OnTimer: %s, %s\n", WndHelper::CurText.GetString(), SearchText.GetString());
 			SearchText = WndHelper::CurText;
 
-			//search..
-			km::Result rs = km::Http::Test();
+			//search.. 
+			CString host;
+			GetDlgItem(IDC_EDIT1)->GetWindowText(host);
+			km::Result rs = km::Http::Test(host, SearchText);
 			SetListCtrl(mList,rs);
 		}
 		break;
@@ -379,9 +383,9 @@ void InitListCtrl(CListCtrl& m_List)
 	m_List.SetExtendedStyle(m_List.GetExtendedStyle() | LVS_EX_FULLROWSELECT | LVS_EX_GRIDLINES);
 
 	// 为列表视图控件添加三列   
-	m_List.InsertColumn(0, _T("语言"), LVCFMT_CENTER, rect.Width() / 3, 0);
-	m_List.InsertColumn(1, _T("2019.02排名"), LVCFMT_CENTER, rect.Width() / 3, 1);
-	m_List.InsertColumn(2, _T("2018.02排名"), LVCFMT_CENTER, rect.Width() / 3, 2); 
+	m_List.InsertColumn(0, _T("名称"), LVCFMT_CENTER, rect.Width() / 3, 0);
+	m_List.InsertColumn(1, _T("测试1"), LVCFMT_CENTER, rect.Width() / 3, 1);
+	m_List.InsertColumn(2, _T("测试2"), LVCFMT_CENTER, rect.Width() / 3, 2); 
 }
 
 void SetListCtrl(CListCtrl& m_List, const km::Result& rs)

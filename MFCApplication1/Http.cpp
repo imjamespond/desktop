@@ -19,9 +19,11 @@ Http::Http()
 {
 }
 
-Result Http::Test()
+Result Http::Test(CString strServer, CString searchText)
 {
-    string jsonStr = Http::GetReq(TEXT("suggest.taobao.com"), TEXT("/sug?code=utf-8&q=%E8%8B%B9%E6%9E%9C"));
+    CString strObjectName = L"";
+    strObjectName.Format(L"/sug?code=utf-8&q=%s", searchText);
+    string jsonStr = Http::GetReq(strServer.GetString(), strObjectName.GetString());
 
     //http://www.cochoy.fr/boost-property-tree/
     //https://blog.csdn.net/yqmfly/article/details/6914590
