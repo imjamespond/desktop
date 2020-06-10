@@ -1,7 +1,8 @@
 ﻿using Microsoft.Win32;
 using System;
+using System.Json;
 using System.Runtime.InteropServices;
-using System.Windows.Forms;
+using System.Windows.Forms; 
 
 namespace WindowsFormsApp1
 {
@@ -48,11 +49,11 @@ namespace WindowsFormsApp1
 
             PopulateModels();
 
-            Close();
-
             Application.EnableVisualStyles();
             //Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Form1());
+            Application.Run(new Form1(this));
+
+            Close();
         }
 
         void PopulateModels()
@@ -79,6 +80,57 @@ namespace WindowsFormsApp1
             }
         }
 
+        public void AddEntity(string jstr)
+        {
+            /*
+            {
+              "Erwin":"123", "Entities":[{"Name":"En1", "Attrs":[{"Name":"Attr1"}]}]
+            }
+             */
+
+            JsonValue json = JsonValue.Parse(jstr);
+            if (json == null || !json.ContainsKey("Erwin"))
+            {
+                return;
+            }
+
+            SCAPI.Sessions scSessionCol = scApp.Sessions;
+            scSession = scSessionCol.Add();
+            scSession.Open(scPUnit, SCAPI._SC_SessionLevel.SCD_SL_M0);  // open the persistence unit
+            if (scSession.IsOpen())
+            {
+                SCAPI.ModelObjects scModelObjects = scSession.ModelObjects;
+
+                Object transactionID = scSession.BeginNamedTransaction("Test");
+
+                if (json.ContainsKey("Entities") && json["Entities"].JsonType == JsonType.Array)
+                {
+                    foreach (JsonValue en in json["Entities"])
+                    {
+                        string EnName = en["name"];
+                        SCAPI.ModelObject oEntity = scModelObjects.Add("Entity");
+                        SCAPI.ModelProperty oEnProperty = oEntity.Properties.Add("Name");
+                        oEnProperty.Value = EnName;
+                         
+                        if (en.ContainsKey("Attrs") && en["Attrs"].JsonType == JsonType.Array)
+                        {
+                            foreach (JsonValue attr in en["Attrs"])
+                            {
+                                string AttrName = attr["name"];
+
+                                SCAPI.ModelObject oAttribute = (SCAPI.ModelObject)scModelObjects.Collect(oEntity).Add("Attribute");
+                                SCAPI.ModelProperty oProperty = oAttribute.Properties.Add("Name");
+                                oProperty.Value = AttrName; 
+                            }
+                        }
+                    }
+                } 
+
+                scSession.CommitTransaction(transactionID);
+            }
+
+        }
+
         void Close()
         {
             /*SCAPI.PropertyBag propBag = this.scPUnit.PropertyBag;
@@ -94,33 +146,26 @@ namespace WindowsFormsApp1
             SCAPI.PersistenceUnit newModel = scPersistenceUnitCol.Create(propBag);*/
 
 
-            SCAPI.Sessions scSessionCol = scApp.Sessions;
-            scSession = scSessionCol.Add();
-            scSession.Open(scPUnit, SCAPI._SC_SessionLevel.SCD_SL_M0);  // open the persistence unit
-            if (scSession.IsOpen())
-            {
-                SCAPI.ModelObjects scModelObjects = scSession.ModelObjects;
-
-                Object transactionID = scSession.BeginNamedTransaction("Test");
-                //SCAPI.ModelObjects scChildObjCol = scModelObjects.Collect(scModelObjects.Root, "Entity");   // child objects collection
-                SCAPI.ModelObject oEntity = scModelObjects.Add("Entity");
-                SCAPI.ModelObject oAttribute = (SCAPI.ModelObject)scModelObjects.Collect(oEntity).Add("Attribute");
-                SCAPI.ModelProperty oProperty = oAttribute.Properties.Add("Name");
-                oProperty.Value = "Attr A";
-                scSession.CommitTransaction(transactionID);
-            }
-
             //close the current model
-            /*if (null != this.scPUnit)
+            if (null != this.scPUnit)
             {
-                scSession.Close();
+                if (null != scSession)
+                {
+                    scSession.Close(); 
+                }
 
                 this.scApp.Sessions.Clear();
                 //this.scApp.PersistenceUnits.Remove(this.scPUnit, false);
-                this.scApp.PersistenceUnits.Clear();
+                //this.scApp.PersistenceUnits.Clear();
                 this.scPUnit = null;
-            }*/
-            
+            }
+
         }
+    }
+
+    class Entity
+    {
+        public string Name { get; set; }
+        public string[] Attrs { get; set; }
     }
 }
