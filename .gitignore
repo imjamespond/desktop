@@ -1,0 +1,4 @@
+**/output/*.dll
+**/output/*.h
+bin
+obj
